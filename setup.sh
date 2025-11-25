@@ -205,5 +205,5 @@ echo "   - README.md        - Main documentation"
 echo "   - SETUP_GUIDE.md   - Setup guide"
 echo "   - RESULTS.md       - Testing & chaos scenarios"
 echo ""
-echo -e "${GREEN}Happy learning! 🚀${NC}"
+echo -e "${GREEN}let's goooo! 🚀${NC}"
 
