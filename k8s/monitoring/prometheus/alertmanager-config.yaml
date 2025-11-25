@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-kube-prometheus-stack-alertmanager
+  namespace: monitoring
+type: Opaque
+stringData:
+  alertmanager.yaml: |
+    global:
+      resolve_timeout: 5m
+      slack_api_url: '${SLACK_WEBHOOK_URL}'
+
+    route:
+      group_by: ['alertname', 'job']
+      group_wait: 5s
+      group_interval: 30s
+      repeat_interval: 5m
+      receiver: 'null'
+      routes:
+        # Ignore Watchdog
+        - match:
+            alertname: Watchdog
+          receiver: 'null'
+        # Only alert on our 3 microservices (critical)
+        - match:
+            severity: critical
+          match_re:
+            job: '^(main-api|auth-service|storage-service)$'
+          receiver: 'critical-receiver'
+        # Only alert on our 3 microservices (warning)
+        - match:
+            severity: warning
+          match_re:
+            job: '^(main-api|auth-service|storage-service)$'
+          receiver: 'warning-receiver'
+        # Catch our custom alerts (ServiceDown, HighLatency, LoginFailuresHigh, UploadFailuresHigh)
+        - match_re:
+            alertname: '^(ServiceDown|HighLatency|LoginFailuresHigh|UploadFailuresHigh)$'
+          receiver: 'critical-receiver'
+        # Everything else goes to null (silenced)
+        - receiver: 'null'
+
+    receivers:
+      - name: 'null'
+      - name: 'critical-receiver'
+        slack_configs:
+          - channel: '${SLACK_CHANNEL}'
+            send_resolved: true
+            title: '{{ .CommonLabels.alertname }}'
+            text: |
+              *Severity:* {{ .CommonLabels.severity }}
+              *Service:* {{ .CommonLabels.job }}
+              {{ range .Alerts }}- {{ .Annotations.summary }}
+              {{ .Annotations.description }}
+              {{ end }}
+      - name: 'warning-receiver'
+        slack_configs:
+          - channel: '${SLACK_CHANNEL}'
+            send_resolved: true
+            title: '{{ .CommonLabels.alertname }}'
+            text: |
+              *Severity:* {{ .CommonLabels.severity }}
+              *Service:* {{ .CommonLabels.job }}
+              {{ range .Alerts }}- {{ .Annotations.summary }}
+              {{ .Annotations.description }}
+              {{ end }}

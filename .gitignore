@@ -1,0 +1,23 @@
+# Environment files with secrets
+.env*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TLS Certificates
+*.pem
+*.crt
+*.key
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/

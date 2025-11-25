@@ -1,0 +1,11 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: main-api-pdb
+  namespace: backend
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: main-api
+

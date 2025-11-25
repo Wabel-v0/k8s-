@@ -1,0 +1,89 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: microservices-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+    app: kube-prometheus-stack
+spec:
+  groups:
+    - name: availability
+      rules:
+        - alert: ServiceDown
+          expr: kube_deployment_status_replicas_available{deployment=~"main-api|auth-service|storage-service"} == 0
+          for: 5s
+          labels:
+            severity: critical
+          annotations:
+            summary: "Service {{ $labels.deployment }} is down"
+            description: "Service {{ $labels.deployment }} has zero available replicas."
+        
+        - alert: HPAMaxedOut
+          expr: kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=~"main-api-hpa|auth-service-hpa|storage-service-hpa"} >= kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler=~"main-api-hpa|auth-service-hpa|storage-service-hpa"}
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "HPA {{ $labels.horizontalpodautoscaler }} at maximum replicas"
+            description: "HPA has scaled to {{ $value }} replicas (max limit). Service cannot scale further to handle load."
+        
+        - alert: PodsNotReady
+          expr: kube_deployment_status_replicas{deployment=~"main-api|auth-service|storage-service"} - kube_deployment_status_replicas_available{deployment=~"main-api|auth-service|storage-service"} > 0
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Service {{ $labels.deployment }} has pods not ready"
+            description: "{{ $value }} pod(s) exist but are not ready to serve traffic."
+
+    - name: latency
+      rules:
+        - alert: HighLatency
+          expr: histogram_quantile(0.95, sum(rate(main_api_request_duration_seconds_bucket[5m])) by (le, route)) > 1.5
+          for: 30s
+          labels:
+            severity: warning
+          annotations:
+            summary: "High latency on {{ $labels.route }}"
+            description: "95th percentile latency is > 1.5s."
+
+    - name: resources
+      rules:
+        - alert: HighCPU
+          expr: sum(rate(container_cpu_usage_seconds_total{pod=~"(main-api|auth-service|storage-service).*"}[5m])) by (pod) > 0.05
+          for: 30s
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage on {{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} CPU usage is > 5% for 30 seconds."
+        
+        - alert: HighMemory
+          expr: sum(container_memory_working_set_bytes{pod=~"(main-api|auth-service|storage-service).*"}) by (pod) / sum(container_spec_memory_limit_bytes{pod=~"(main-api|auth-service|storage-service).*"}) by (pod) > 0.85
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on {{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} memory usage is > 85%."
+
+    - name: errors
+      rules:
+        - alert: LoginFailuresHigh
+          expr: sum(rate(auth_logins_total{status="failure"}[5m])) > 0.1
+          for: 30s
+          labels:
+            severity: warning
+          annotations:
+            summary: "High login failure rate"
+            description: "auth-service login failures > 0.1/sec (5m rate)."
+
+        - alert: UploadFailuresHigh
+          expr: sum(rate(storage_uploads_total{status="failure"}[5m])) > 0.1
+          for: 30s
+          labels:
+            severity: warning
+          annotations:
+            summary: "High upload failure rate"
+            description: "storage-service upload failures > 0.1/sec (5m rate)."

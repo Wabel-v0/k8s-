@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: storage-configmap
+  namespace: backend
+data:
+  PORT: "7070"
+  S3_ENDPOINT: "http://fake-s3-host:9090"

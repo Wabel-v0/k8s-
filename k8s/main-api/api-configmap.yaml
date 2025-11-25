@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: main-api-configmap
+  namespace: backend
+data:
+  PORT: "8080"
+  AUTH_SERVICE_URL: "http://auth-service.backend.svc.cluster.local"
+  STORAGE_SERVICE_URL: "http://storage-service.backend.svc.cluster.local"

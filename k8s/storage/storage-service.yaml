@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage-service
+  namespace: backend
+  labels:
+    app: storage-service
+spec:
+  type: ClusterIP
+  selector:
+    app: storage-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 7070
