@@ -1,8 +1,8 @@
-# Try Me - Kubernetes Microservices Project
+# Try Me 
 
 ## What is this?
 
-This is a simple project that runs three small programs (called services) on Kubernetes. It helps you learn how to use Kubernetes and monitor your services.
+This is a simple project that runs three small programs on Kubernetes.
 
 ## What you need
 
@@ -110,6 +110,3 @@ You get alerts for:
 
 Run `make help` to see all available commands.
 
-Check `ARCHITECTURE.md` to understand how the system works.
-
-Check `KUBERNETES.md` to learn about Kubernetes features used in this project.
