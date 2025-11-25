@@ -23,6 +23,12 @@ Before you start, install these programs on your computer:
 ```bash
 minikube start
 ```
+Add this to etc/hosts
+```bash
+127.0.0.1   main-api.internal
+
+```
+So the tunnel can work 
 
 ### Step 2: Install everything
 
